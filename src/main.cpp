@@ -262,6 +262,13 @@ int main()
         glm::vec3(1.5f, 0.2f, -1.5f),
         glm::vec3(-1.3f, 1.0f, -1.5f)};
 
+    // Positions des point lights
+    glm::vec3 pointLightPositions[] = {
+        glm::vec3(0.7f, 0.2f, 2.0f),
+        glm::vec3(2.3f, -3.3f, -4.0f),
+        glm::vec3(-4.0f, 2.0f, -12.0f),
+        glm::vec3(0.0f, 0.0f, -3.0f)};
+
     // Boucle de rendu
     while (!glfwWindowShouldClose(window))
     {
@@ -289,16 +296,47 @@ int main()
         glm::vec3 diffuseColor = lightColor * glm::vec3(1.0f);
         glm::vec3 ambientColor = diffuseColor * glm::vec3(0.3f);
         // On envoie les valeurs des couleurs de l'objet et de la lumière au shader via les uniform
-        glUniform3f(glGetUniformLocation(objectShader.ID, "light.ambient"), ambientColor.r, ambientColor.g, ambientColor.b);
-        glUniform3f(glGetUniformLocation(objectShader.ID, "light.diffuse"), diffuseColor.r, diffuseColor.g, diffuseColor.b);
-        glUniform3f(glGetUniformLocation(objectShader.ID, "light.specular"), lightColor.r, lightColor.g, lightColor.b);
-        glUniform3f(glGetUniformLocation(objectShader.ID, "light.position"), camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
-        glUniform3f(glGetUniformLocation(objectShader.ID, "light.direction"), camera.getFront().x, camera.getFront().y, camera.getFront().z);
-        glUniform1f(glGetUniformLocation(objectShader.ID, "light.constant"), 1.0f);
-        glUniform1f(glGetUniformLocation(objectShader.ID, "light.linear"), 0.09f);
-        glUniform1f(glGetUniformLocation(objectShader.ID, "light.quadratic"), 0.032f);
-        glUniform1f(glGetUniformLocation(objectShader.ID, "light.cosCutOff"), glm::cos(glm::radians(12.5f)));
-        glUniform1f(glGetUniformLocation(objectShader.ID, "light.cosOuterCutOff"), glm::cos(glm::radians(17.5f)));
+        // Uniforms de la lumière directionnelle
+        glUniform3f(glGetUniformLocation(objectShader.ID, "dirLight.direction"), -0.2f, -1.0f, -0.3f);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "dirLight.ambient"), 0.05f, 0.05f, 0.05f);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "dirLight.diffuse"), 0.4f, 0.4f, 0.4f);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "dirLight.specular"), 0.5f, 0.5f, 0.5f);
+
+        // Point light 0
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[0].position"), pointLightPositions[0].x, pointLightPositions[0].y, pointLightPositions[0].z);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[0].ambient"), 0.05f, 0.05f, 0.05f);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[0].diffuse"), 0.8f, 0.8f, 0.8f);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[0].specular"), 1.0f, 1.0f, 1.0f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "pointLights[0].constant"), 1.0f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "pointLights[0].linear"), 0.09f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "pointLights[0].quadratic"), 0.032f);
+
+        // Point light 1
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[1].position"), pointLightPositions[1].x, pointLightPositions[1].y, pointLightPositions[1].z);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[1].ambient"), 0.05f, 0.05f, 0.05f);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[1].diffuse"), 0.8f, 0.8f, 0.8f);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[1].specular"), 1.0f, 1.0f, 1.0f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "pointLights[1].constant"), 1.0f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "pointLights[1].linear"), 0.09f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "pointLights[1].quadratic"), 0.032f);
+
+        // Point light 2
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[2].position"), pointLightPositions[2].x, pointLightPositions[2].y, pointLightPositions[2].z);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[2].ambient"), 0.05f, 0.05f, 0.05f);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[2].diffuse"), 0.8f, 0.8f, 0.8f);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[2].specular"), 1.0f, 1.0f, 1.0f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "pointLights[2].constant"), 1.0f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "pointLights[2].linear"), 0.09f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "pointLights[2].quadratic"), 0.032f);
+
+        // Point light 3
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[3].position"), pointLightPositions[3].x, pointLightPositions[3].y, pointLightPositions[3].z);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[3].ambient"), 0.05f, 0.05f, 0.05f);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[3].diffuse"), 0.8f, 0.8f, 0.8f);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "pointLights[3].specular"), 1.0f, 1.0f, 1.0f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "pointLights[3].constant"), 1.0f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "pointLights[3].linear"), 0.09f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "pointLights[3].quadratic"), 0.032f);
 
         glUniform3f(glGetUniformLocation(objectShader.ID, "viewPos"), camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
 
@@ -306,8 +344,7 @@ int main()
         glUniform1f(glGetUniformLocation(objectShader.ID, "material.shininess"), 32.0f);
 
         // Matrice de modèle du cube qui va réfléchir la lumière (position 0, 0, 0)
-        // glm::mat4 model = glm::mat4(1.0f);
-        // glUniformMatrix4fv(glGetUniformLocation(objectShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glm::mat4 model = glm::mat4(1.0f);
 
         // On calcule les matrices de transformation de la scène
         glm::mat4 view = camera.getViewMatrix();
@@ -330,7 +367,7 @@ int main()
         for (unsigned int i = 0; i < 10; i++)
         {
             // calculate the model matrix for each object and pass it to shader before drawing
-            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
             float angle = 20.0f * i;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
@@ -343,22 +380,21 @@ int main()
 
         lightSourceShader.use();
 
-        // Matrice de modèle du cube source de lumière (position 1.2f, 1.0f, 2.0f)
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, LIGHT_SOURCE_POSITION);
-        // On rend le cube plus petit
-        model = glm::scale(model, glm::vec3(0.2f));
-        glUniformMatrix4fv(glGetUniformLocation(lightSourceShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
         // On utilise les mêmes matrices de vue et de projection que pour le cube qui va réfléchir la lumière
         glUniformMatrix4fv(glGetUniformLocation(lightSourceShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(lightSourceShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-        glUniform3f(glGetUniformLocation(lightSourceShader.ID, "lightColor"), lightColor.r, lightColor.g, lightColor.b);
-
         // On dessine le cube source de lumière en utilisant le VAO qui lui est associé
         glBindVertexArray(lightSourceVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        for (unsigned int i = 0; i < 4; i++)
+        {
+            glUniform3f(glGetUniformLocation(lightSourceShader.ID, "lightColor"), 0.8f, 0.8f, 0.8f);
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, pointLightPositions[i]);
+            model = glm::scale(model, glm::vec3(0.2f));
+            glUniformMatrix4fv(glGetUniformLocation(lightSourceShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         // On échange les buffers de la fenêtre pour que ce qu'on vient de dessiner soit visible
         glfwSwapBuffers(window);
