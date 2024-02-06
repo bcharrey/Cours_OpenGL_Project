@@ -243,9 +243,11 @@ int main()
     glfwSetCursorPosCallback(window, mouse_callback);
 
     unsigned int diffuseMap = loadTexture("resources/textures/container2.png");
-    
+    unsigned int specularMap = loadTexture("resources/textures/container2_specular.png");
+
     objectShader.use();
     glUniform1i(glGetUniformLocation(objectShader.ID, "material.diffuse"), 0);
+    glUniform1i(glGetUniformLocation(objectShader.ID, "material.specular"), 1);
 
     // Boucle de rendu
     while (!glfwWindowShouldClose(window))
@@ -281,7 +283,6 @@ int main()
         glUniform3f(glGetUniformLocation(objectShader.ID, "viewPos"), camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
 
         glUniform3f(glGetUniformLocation(objectShader.ID, "material.ambient"), 0.1f, 0.1f, 0.1f);
-        glUniform3f(glGetUniformLocation(objectShader.ID, "material.specular"), 0.5f, 0.5f, 0.5f);
         glUniform1f(glGetUniformLocation(objectShader.ID, "material.shininess"), 32.0f);
 
         // Matrice de modèle du cube qui va réfléchir la lumière (position 0, 0, 0)
@@ -295,6 +296,13 @@ int main()
         // On prend en compte le FOV de la caméra pour la matrice de projection
         glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_CLIP_PLANE_DISTANCE, FAR_CLIP_PLANE_DISTANCE);
         glUniformMatrix4fv(glGetUniformLocation(objectShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+        // On active la texture à l'unité de texture 0
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        // On active la texture à l'unite de texture 1
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
 
         // On dessine le cube qui va réfléchir la lumière en utilisant le VAO qui lui est associé
         glBindVertexArray(objectVAO);
@@ -316,10 +324,6 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(lightSourceShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
         glUniform3f(glGetUniformLocation(lightSourceShader.ID, "lightColor"), lightColor.r, lightColor.g, lightColor.b);
-
-        // On active la texture à l'unité de texture 0
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMap);
 
         // On dessine le cube source de lumière en utilisant le VAO qui lui est associé
         glBindVertexArray(lightSourceVAO);
