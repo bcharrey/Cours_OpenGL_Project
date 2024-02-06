@@ -214,10 +214,19 @@ int main()
 
         // On utilise le shader program du cube qui va réfléchir la lumière
         objectShader.use();
+
+        // On modifie la couleur de la source de lumière au cours du temps
+        glm::vec3 lightColor;
+        lightColor.r = sin(glfwGetTime() * 2.0f);
+        lightColor.g = sin(glfwGetTime() * 0.7f);
+        lightColor.b = sin(glfwGetTime() * 1.3f);
+        // On ajuste la couleur de la lumière pour la diffuse et l'ambiante
+        glm::vec3 diffuseColor = lightColor * glm::vec3(0.6f);
+        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.3f);
         // On envoie les valeurs des couleurs de l'objet et de la lumière au shader via les uniform
-        glUniform3f(glGetUniformLocation(objectShader.ID, "light.ambient"), 0.2f, 0.2f, 0.2f);
-        glUniform3f(glGetUniformLocation(objectShader.ID, "light.diffuse"), 0.5f, 0.5f, 0.5f);
-        glUniform3f(glGetUniformLocation(objectShader.ID, "light.specular"), 1.0f, 1.0f, 1.0f);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "light.ambient"), ambientColor.r, ambientColor.g, ambientColor.b);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "light.diffuse"), diffuseColor.r, diffuseColor.g, diffuseColor.b);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "light.specular"), lightColor.r, lightColor.g, lightColor.b);
         glUniform3f(glGetUniformLocation(objectShader.ID, "light.position"), LIGHT_SOURCE_POSITION.x, LIGHT_SOURCE_POSITION.y, LIGHT_SOURCE_POSITION.z);
         glUniform3f(glGetUniformLocation(objectShader.ID, "viewPos"), camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
 
@@ -256,6 +265,8 @@ int main()
         // On utilise les mêmes matrices de vue et de projection que pour le cube qui va réfléchir la lumière
         glUniformMatrix4fv(glGetUniformLocation(lightSourceShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(lightSourceShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+        glUniform3f(glGetUniformLocation(lightSourceShader.ID, "lightColor"), lightColor.r, lightColor.g, lightColor.b);
 
         // On dessine le cube source de lumière en utilisant le VAO qui lui est associé
         glBindVertexArray(lightSourceVAO);
