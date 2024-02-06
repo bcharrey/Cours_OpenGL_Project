@@ -249,6 +249,19 @@ int main()
     glUniform1i(glGetUniformLocation(objectShader.ID, "material.diffuse"), 0);
     glUniform1i(glGetUniformLocation(objectShader.ID, "material.specular"), 1);
 
+    // Positions des cubes qui vont réfléchir la lumière
+    glm::vec3 cubePositions[] = {
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(2.0f, 5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3(2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f, 3.0f, -7.5f),
+        glm::vec3(1.3f, -2.0f, -2.5f),
+        glm::vec3(1.5f, 2.0f, -2.5f),
+        glm::vec3(1.5f, 0.2f, -1.5f),
+        glm::vec3(-1.3f, 1.0f, -1.5f)};
+
     // Boucle de rendu
     while (!glfwWindowShouldClose(window))
     {
@@ -280,14 +293,18 @@ int main()
         glUniform3f(glGetUniformLocation(objectShader.ID, "light.diffuse"), diffuseColor.r, diffuseColor.g, diffuseColor.b);
         glUniform3f(glGetUniformLocation(objectShader.ID, "light.specular"), lightColor.r, lightColor.g, lightColor.b);
         glUniform3f(glGetUniformLocation(objectShader.ID, "light.position"), LIGHT_SOURCE_POSITION.x, LIGHT_SOURCE_POSITION.y, LIGHT_SOURCE_POSITION.z);
+        // glUniform3f(glGetUniformLocation(objectShader.ID, "light.direction"), -0.2f, -1.0f, -0.3f);
+                glUniform1f(glGetUniformLocation(objectShader.ID, "light.constant"), 1.0f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "light.linear"), 0.09f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "light.quadratic"), 0.032f);
         glUniform3f(glGetUniformLocation(objectShader.ID, "viewPos"), camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
 
         glUniform3f(glGetUniformLocation(objectShader.ID, "material.ambient"), 0.1f, 0.1f, 0.1f);
         glUniform1f(glGetUniformLocation(objectShader.ID, "material.shininess"), 32.0f);
 
         // Matrice de modèle du cube qui va réfléchir la lumière (position 0, 0, 0)
-        glm::mat4 model = glm::mat4(1.0f);
-        glUniformMatrix4fv(glGetUniformLocation(objectShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        // glm::mat4 model = glm::mat4(1.0f);
+        // glUniformMatrix4fv(glGetUniformLocation(objectShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
         // On calcule les matrices de transformation de la scène
         glm::mat4 view = camera.getViewMatrix();
@@ -306,14 +323,25 @@ int main()
 
         // On dessine le cube qui va réfléchir la lumière en utilisant le VAO qui lui est associé
         glBindVertexArray(objectVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        for (unsigned int i = 0; i < 10; i++)
+        {
+            // calculate the model matrix for each object and pass it to shader before drawing
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            glUniformMatrix4fv(glGetUniformLocation(objectShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         // Rendu du cube source de lumière
 
         lightSourceShader.use();
 
         // Matrice de modèle du cube source de lumière (position 1.2f, 1.0f, 2.0f)
-        model = glm::mat4(1.0f);
+        glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, LIGHT_SOURCE_POSITION);
         // On rend le cube plus petit
         model = glm::scale(model, glm::vec3(0.2f));
