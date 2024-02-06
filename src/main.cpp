@@ -292,11 +292,14 @@ int main()
         glUniform3f(glGetUniformLocation(objectShader.ID, "light.ambient"), ambientColor.r, ambientColor.g, ambientColor.b);
         glUniform3f(glGetUniformLocation(objectShader.ID, "light.diffuse"), diffuseColor.r, diffuseColor.g, diffuseColor.b);
         glUniform3f(glGetUniformLocation(objectShader.ID, "light.specular"), lightColor.r, lightColor.g, lightColor.b);
-        glUniform3f(glGetUniformLocation(objectShader.ID, "light.position"), LIGHT_SOURCE_POSITION.x, LIGHT_SOURCE_POSITION.y, LIGHT_SOURCE_POSITION.z);
-        // glUniform3f(glGetUniformLocation(objectShader.ID, "light.direction"), -0.2f, -1.0f, -0.3f);
-                glUniform1f(glGetUniformLocation(objectShader.ID, "light.constant"), 1.0f);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "light.position"), camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "light.direction"), camera.getFront().x, camera.getFront().y, camera.getFront().z);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "light.constant"), 1.0f);
         glUniform1f(glGetUniformLocation(objectShader.ID, "light.linear"), 0.09f);
         glUniform1f(glGetUniformLocation(objectShader.ID, "light.quadratic"), 0.032f);
+        glUniform1f(glGetUniformLocation(objectShader.ID, "light.cosCutOff"), glm::cos(glm::radians(12.5f)));
+        glUniform1f(glGetUniformLocation(objectShader.ID, "light.cosOuterCutOff"), glm::cos(glm::radians(17.5f)));
+
         glUniform3f(glGetUniformLocation(objectShader.ID, "viewPos"), camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
 
         glUniform3f(glGetUniformLocation(objectShader.ID, "material.ambient"), 0.1f, 0.1f, 0.1f);
