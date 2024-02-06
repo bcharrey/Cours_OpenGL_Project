@@ -218,6 +218,7 @@ int main()
         glUniform3f(glGetUniformLocation(objectShader.ID, "objectColor"), 1.0f, 0.5f, 0.31f);
         glUniform3f(glGetUniformLocation(objectShader.ID, "lightColor"), 1.0f, 1.0f, 1.0f);
         glUniform3f(glGetUniformLocation(objectShader.ID, "lightPos"), LIGHT_SOURCE_POSITION.x, LIGHT_SOURCE_POSITION.y, LIGHT_SOURCE_POSITION.z);
+        glUniform3f(glGetUniformLocation(objectShader.ID, "viewPos"), camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
 
         // Matrice de modèle du cube qui va réfléchir la lumière (position 0, 0, 0)
         glm::mat4 model = glm::mat4(1.0f);

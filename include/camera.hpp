@@ -21,6 +21,7 @@ public:
     glm::mat4 getViewMatrix();
 
     float getZoom() { return _zoom; }
+    glm::vec3 getPosition() { return _position; }
 
     // Traite l'entrée reçue de tout système d'entrée de type clavier. Accepte le paramètre d'entrée sous la forme d'une énumération définie par la caméra.
     void processKeyboard(CameraMovement direction, float deltaTime);
