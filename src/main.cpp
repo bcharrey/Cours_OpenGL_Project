@@ -5,14 +5,19 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include <memory>
+#include <regex>
+#include <algorithm>
+
 #include "shader.hpp"
 #include "constants.hpp"
 #include "color.hpp"
 #include "camera.hpp"
-#include "model.hpp"
+#include "gameObject.hpp"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 // Caméra
 Camera camera(CAMERA_START_POSITION);
@@ -27,10 +32,86 @@ bool firstMouse = true;
 float lastX;
 float lastY;
 
+// Le conteneur pour les GameObjects
+std::vector<std::unique_ptr<GameObject>> gameObjects;
+
+// Variables pour la gestion du clavier
+bool graveAccentKeyPressed = false;
+
+// Définition des motifs regex pour les instructions de transformation d'un gameObject
+std::regex translatePattern(R"(t\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+))");
+std::regex rotatePattern(R"(r\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+))");
+std::regex scalePattern(R"(s\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+))");
+
 // Fonction appelée lors du redimensionnement de la fenêtre
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
+}
+
+void applyTransformations(const std::string &input)
+{
+    // Extraire le nom du GameObject au début de l'entrée
+    size_t firstSpace = input.find(' ');
+    if (firstSpace == std::string::npos)
+    {
+        std::cout << "Format d'entree invalide." << std::endl;
+        return;
+    }
+    std::string gameObjectName = input.substr(0, firstSpace);
+    std::string transformations = input.substr(firstSpace + 1);
+
+    // Trouver le GameObject par son nom
+    auto it = std::find_if(gameObjects.begin(), gameObjects.end(), [&gameObjectName](const std::unique_ptr<GameObject> &obj)
+                           { return obj->getName() == gameObjectName; });
+
+    if (it == gameObjects.end())
+    {
+        std::cout << "GameObject '" << gameObjectName << "' non trouve." << std::endl;
+        return;
+    }
+    auto &gameObject = *it; // Référence au GameObject trouvé
+
+    bool transformationApplied = false; // Pour vérifier si une transformation a été appliquée
+
+    // Fonction pour appliquer les transformations
+    auto apply = [&](const std::regex &pattern, const std::string &transformationInput, auto transformFunc)
+    {
+        std::smatch matches;
+        std::string::const_iterator searchStart = transformationInput.cbegin();
+        while (std::regex_search(searchStart, transformationInput.cend(), matches, pattern))
+        {
+            transformationApplied = true;
+            transformFunc(matches);
+            searchStart = matches.suffix().first; // Continue à chercher après la dernière correspondance
+        }
+    };
+
+    // Application des translations
+    apply(translatePattern, transformations, [&](const std::smatch &matches)
+          {
+        float x = std::stof(matches[1].str()), y = std::stof(matches[2].str()), z = std::stof(matches[3].str());
+        gameObject->modelMatrixTranslate(glm::vec3(x, y, z));
+        std::cout << "Translation appliquee: x=" << x << ", y=" << y << ", z=" << z << std::endl; });
+
+    // Application des rotations
+    apply(rotatePattern, transformations, [&](const std::smatch &matches)
+          {
+        float angle = std::stof(matches[1].str()), x = std::stof(matches[2].str()), y = std::stof(matches[3].str()), z = std::stof(matches[4].str());
+        gameObject->modelMatrixRotate(angle, glm::vec3(x, y, z));
+        std::cout << "Rotation appliquee: angle=" << angle << ", x=" << x << ", y=" << y << ", z=" << z << std::endl; });
+
+    // Application des mises à l'échelle
+    apply(scalePattern, transformations, [&](const std::smatch &matches)
+          {
+        float x = std::stof(matches[1].str()), y = std::stof(matches[2].str()), z = std::stof(matches[3].str());
+        gameObject->modelMatrixScale(glm::vec3(x, y, z));
+        std::cout << "Mise a l'echelle appliquee: x=" << x << ", y=" << y << ", z=" << z << std::endl; });
+
+    if (!transformationApplied)
+    {
+        std::cout << "Aucune transformation appliquee." << std::endl;
+    }
 }
 
 // Fonction appelée lors de l'appui sur une touche du clavier
@@ -48,6 +129,23 @@ void processInput(GLFWwindow *window)
         camera.processKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.processKeyboard(RIGHT, deltaTime);
+
+    // Modification de GameObject
+    if (glfwGetKey(window, GLFW_KEY_GRAVE_ACCENT) == GLFW_PRESS && !graveAccentKeyPressed)
+    {
+        graveAccentKeyPressed = true;
+        std::cout << "Pour modifier un gameObject :"
+                  << std::endl
+                  << "nomDuGameObject t valeurX valeurY valeurZ r valeurAngle valeurAxeX valeurAxeY valeurAxeZ s valeurX valeurY valeurZ :"
+                  << std::endl;
+        string userInput;
+        std::getline(std::cin, userInput);
+        applyTransformations(userInput);
+    }
+    else if (glfwGetKey(window, GLFW_KEY_GRAVE_ACCENT) == GLFW_RELEASE)
+    {
+        graveAccentKeyPressed = false;
+    }
 }
 
 // Fonction appelée lors du déplacement de la souris
@@ -191,11 +289,18 @@ int main()
         glm::vec3(-4.0f, 2.0f, -12.0f),
         glm::vec3(0.0f, 0.0f, -3.0f)};
 
-    Model backpack("resources/objects/backpack/backpack.obj");
+    gameObjects.push_back(std::make_unique<GameObject>("backpack", "resources/objects/backpack/backpack.obj", false, objectShader, gameObjects));
 
-    stbi_set_flip_vertically_on_load(true);
+    // Test d'un gameObject créé avec des transformations en translation, rotation et échelle
+    glm::mat4 swordModelMatrix = glm::mat4(1.0f);
+    swordModelMatrix = glm::translate(swordModelMatrix, glm::vec3(3.0f, 2.0f, -5.0f));
+    swordModelMatrix = glm::rotate(swordModelMatrix, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    swordModelMatrix = glm::scale(swordModelMatrix, glm::vec3(0.2f, 0.2f, 0.2f));
 
-    Model sword("resources/objects/sword/Sting-Sword-lowpoly.obj");
+    gameObjects.push_back(std::make_unique<GameObject>("sword", "resources/objects/sword/Sting-Sword-lowpoly.obj", true, objectShader, swordModelMatrix, gameObjects));
+    gameObjects.push_back(std::make_unique<GameObject>("sword", "resources/objects/sword/Sting-Sword-lowpoly.obj", true, objectShader, gameObjects));
+    gameObjects.push_back(std::make_unique<GameObject>("sword", "resources/objects/sword/Sting-Sword-lowpoly.obj", true, objectShader, gameObjects));
+    gameObjects.push_back(std::make_unique<GameObject>("sword", "resources/objects/sword/Sting-Sword-lowpoly.obj", true, objectShader, gameObjects));
 
     // Boucle de rendu
     while (!glfwWindowShouldClose(window))
@@ -289,8 +394,13 @@ int main()
         glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_CLIP_PLANE_DISTANCE, FAR_CLIP_PLANE_DISTANCE);
         glUniformMatrix4fv(glGetUniformLocation(objectShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-        backpack.Draw(objectShader);
-        sword.Draw(objectShader);
+        // Exemple d'un mouvement donné à un gameObject, une rotation autour de l'axe y
+        gameObjects[1]->modelMatrixRotate(0.01f, glm::vec3(0.0f, 1.0f, 0.0f));
+
+        for (auto &gameObject : gameObjects)
+        {
+            gameObject->Draw();
+        }
 
         // Rendu des cubes source de lumière
 
@@ -320,8 +430,7 @@ int main()
     // Quand la fenêtre est fermée, on libère les ressources
     glDeleteVertexArrays(1, &lightSourceVAO);
     glDeleteBuffers(1, &VBO);
-    backpack.CleanUp();
-    sword.CleanUp();
+    gameObjects.clear();
     objectShader.deleteProgram();
     lightSourceShader.deleteProgram();
 
